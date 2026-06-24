@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creature Creator — No Crows tools</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <p class="back"><a href="../../">&larr; No Crows tools</a></p>
+  <h1>Creature Creator</h1>
+  <p class="intro">Add limb images, position them, and connect them with joints. Right-click the canvas or press + Joint to add a joint. Export writes each joint's offset from its connected limb centers to JSON.</p>
+
+  <div id="app">
+    <aside id="panel">
+      <div class="toolbar">
+        <button id="add-limbs">Add limbs</button>
+        <button id="add-joint">+ Joint</button>
+        <button id="reset-view">Reset zoom (1:1)</button>
+        <button id="export-json">Export JSON</button>
+        <input type="file" id="limb-file" accept="image/png" multiple hidden>
+      </div>
+
+      <section>
+        <h2>Limbs</h2>
+        <ul id="limb-list" class="list"></ul>
+      </section>
+
+      <section>
+        <h2>Joints</h2>
+        <ul id="joint-list" class="list"></ul>
+      </section>
+
+      <section id="connections-section" hidden>
+        <h2>Connected to <span id="conn-joint-name"></span></h2>
+        <ul id="conn-list" class="list"></ul>
+      </section>
+    </aside>
+
+    <div id="stage">
+      <div id="world">
+        <svg id="links"></svg>
+      </div>
+      <p id="stage-hint">Add limbs to begin. Right-click to drop a joint. Scroll to zoom.</p>
+    </div>
+  </div>
+
+  <script src="creature.js"></script>
+</body>
+</html>
