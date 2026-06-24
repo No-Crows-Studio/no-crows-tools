@@ -9,7 +9,7 @@
 <body>
   <p class="back"><a href="../../">&larr; No Crows tools</a></p>
   <h1>Transparent PNG Cropper</h1>
-  <p>Drop or choose PNGs. Each is cropped to the tightest box containing every non-transparent pixel. Files download as <code>name_tcropped.png</code>. Runs entirely in your browser — nothing is uploaded.</p>
+  <p>Drop or choose PNGs. Each is cropped to the tightest box containing every non-transparent pixel and downloads as <code>name_tcropped.png</code>.</p>
 
   <div id="drop">
     <p>Drop PNG files here, or click to choose (multiple allowed)</p>
@@ -26,12 +26,12 @@
   </div>
 
   <div id="actions">
-    <button id="downloadAll" disabled>Download all</button>
+    <button id="download-all" disabled>Download all</button>
     <button id="clear" disabled>Clear</button>
   </div>
 
   <div id="grid">
-    <p id="emptyMsg">No images yet.</p>
+    <p id="empty-msg">No images yet.</p>
   </div>
 
   <script src="cropper.js"></script>
