@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transparent PNG Cropper — No Crows tools</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <p class="back"><a href="../../">&larr; No Crows tools</a></p>
+  <h1>Transparent PNG Cropper</h1>
+  <p>Drop or choose PNGs. Each is cropped to the tightest box containing every non-transparent pixel. Files download as <code>name_tcropped.png</code>. Runs entirely in your browser — nothing is uploaded.</p>
+
+  <div id="drop">
+    <p>Drop PNG files here, or click to choose (multiple allowed)</p>
+    <input type="file" id="file" accept="image/png" multiple hidden>
+  </div>
+
+  <div id="controls">
+    <label>Alpha threshold
+      <input type="number" id="threshold" value="0" min="0" max="255" step="1">
+    </label>
+    <label>Padding (px)
+      <input type="number" id="padding" value="0" min="0" step="1">
+    </label>
+  </div>
+
+  <div id="actions">
+    <button id="downloadAll" disabled>Download all</button>
+    <button id="clear" disabled>Clear</button>
+  </div>
+
+  <div id="grid">
+    <p id="emptyMsg">No images yet.</p>
+  </div>
+
+  <script src="cropper.js"></script>
+</body>
+</html>

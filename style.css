@@ -1,0 +1,35 @@
+body {
+  font-family: sans-serif;
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  color: #222;
+  line-height: 1.5;
+}
+
+h1 {
+  font-size: 1.6rem;
+}
+
+ul.tools {
+  list-style: none;
+  padding: 0;
+}
+
+ul.tools li {
+  border: 1px solid #ccc;
+  padding: 0.8rem 1rem;
+  margin: 0.6rem 0;
+}
+
+ul.tools a {
+  font-weight: bold;
+  font-size: 1.05rem;
+}
+
+ul.tools .desc {
+  display: block;
+  color: #555;
+  font-size: 0.85rem;
+  margin-top: 0.2rem;
+}
