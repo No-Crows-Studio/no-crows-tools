@@ -9,17 +9,31 @@
 <body>
   <p class="back"><a href="../../">&larr; No Crows tools</a></p>
   <h1>Creature Creator</h1>
-  <p class="intro">Add limb images, position them, and connect them with joints. Right-click the canvas or press + Joint to add a joint. Hide a limb to lock it out of the way while you work. Select a limb or joint and nudge it with the arrow keys (hold Shift for larger steps). Export writes each joint's offset from its connected limb centers to JSON.</p>
+  <p class="intro">Add limb images, position them, and connect them with joints. Right-click the canvas or press + Joint to add a joint. Hide a limb to lock it out of the way while you work. Select a limb or joint and nudge it with the arrow keys (hold Shift for larger steps). Export joint data writes each joint's offset from its connected limb centers to JSON. Export full creature saves a zip of the images and layout that import full creature can reload.</p>
 
   <div id="app">
     <aside id="panel">
-      <div class="toolbar">
-        <button id="add-limbs">Add limbs</button>
-        <button id="add-joint">+ Joint</button>
-        <button id="reset-view">Reset zoom (1:1)</button>
-        <button id="export-json">Export JSON</button>
-        <input type="file" id="limb-file" accept="image/png" multiple hidden>
-      </div>
+      <section>
+        <h2>Import / Export</h2>
+        <div class="toolbar">
+          <input type="text" id="creature-name" placeholder="creature name">
+          <button id="export-joints">Export joint data</button>
+          <button id="export-full">Export full creature</button>
+          <button id="import-full">Import full creature</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Editor</h2>
+        <div class="toolbar">
+          <button id="add-limbs">Add limbs</button>
+          <button id="add-joint">+ Joint</button>
+          <button id="reset-view">Reset zoom (1:1)</button>
+        </div>
+      </section>
+
+      <input type="file" id="limb-file" accept="image/png" multiple hidden>
+      <input type="file" id="creature-file" accept=".zip,application/zip" hidden>
 
       <section>
         <h2>Limbs</h2>
@@ -45,6 +59,7 @@
     </div>
   </div>
 
+  <script src="zip.js"></script>
   <script src="creature.js"></script>
 </body>
 </html>

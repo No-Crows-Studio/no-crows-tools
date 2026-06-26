@@ -3,6 +3,8 @@ const worldEl = document.getElementById('world');
 const linksEl = document.getElementById('links');
 const stageHint = document.getElementById('stage-hint');
 const limbFile = document.getElementById('limb-file');
+const creatureFile = document.getElementById('creature-file');
+const nameInput = document.getElementById('creature-name');
 const limbListEl = document.getElementById('limb-list');
 const jointListEl = document.getElementById('joint-list');
 const connSection = document.getElementById('connections-section');
@@ -19,7 +21,7 @@ const ARROW_STEPS = {
   ArrowRight: { x: 1, y: 0 }
 };
 
-const limbs = [];  // { id, name, url, x, y, width, height, el }
+const limbs = [];  // { id, name, url, blob, x, y, width, height, hidden, el }
 const joints = []; // { id, name, x, y, el, connections: Set<limbId> }
 
 let idSeq = 0;
@@ -99,56 +101,64 @@ function addLimbsFromFiles(fileList) {
   files.forEach(file => {
     const url = URL.createObjectURL(file);
     const img = new Image();
-    img.onload = () => createLimb(file.name, url, img.naturalWidth, img.naturalHeight);
+    img.onload = () => createLimb(file.name, url, file, img.naturalWidth, img.naturalHeight);
     img.onerror = () => URL.revokeObjectURL(url);
     img.src = url;
   });
 }
 
-// creates a limb element on the stage and registers it
-function createLimb(name, url, w, h) {
-  const id = nextId();
-  const x = 40 + (placeCount % 6) * 30;
-  const y = 40 + (placeCount % 6) * 30;
-  placeCount++;
-
+// builds a limb element and record without inserting it into the layer list
+function makeLimb(name, url, blob, w, h, x, y, hidden) {
   const el = document.createElement('img');
   el.className = 'limb';
   el.src = url;
   el.draggable = false;
   el.style.width = w + 'px';
   el.style.height = h + 'px';
-  el.addEventListener('pointerdown', e => onItemPointerDown('limb', id, e));
+  if (hidden) el.classList.add('hidden');
 
-  const limb = { id, name, url, x, y, width: w, height: h, hidden: false, el };
-  limbs.unshift(limb);
+  const limb = { id: nextId(), name, url, blob, x, y, width: w, height: h, hidden, el };
+  el.addEventListener('pointerdown', e => onItemPointerDown('limb', limb.id, e));
   worldEl.appendChild(el);
   positionLimbEl(limb);
+  return limb;
+}
+
+// creates a limb on the stage as the new top layer and selects it
+function createLimb(name, url, blob, w, h) {
+  const x = 40 + (placeCount % 6) * 30;
+  const y = 40 + (placeCount % 6) * 30;
+  placeCount++;
+  const limb = makeLimb(name, url, blob, w, h, x, y, false);
+  limbs.unshift(limb);
   applyZOrder();
   renderLimbList();
   renderConnList();
-  selectLimb(id);
+  selectLimb(limb.id);
   updateHint();
 }
 
-// creates a joint marker at the given stage coordinates
-function createJoint(x, y) {
-  const id = nextId();
-  jointCount++;
-  const name = `Joint ${jointCount}`;
-
+// builds a joint element and record without inserting it into the joint list
+function makeJoint(name, x, y) {
   const el = document.createElement('div');
   el.className = 'joint';
   el.innerHTML = '<span class="joint-dot"></span><span class="joint-label"></span>';
   el.querySelector('.joint-label').textContent = name;
-  el.addEventListener('pointerdown', e => onItemPointerDown('joint', id, e));
 
-  const joint = { id, name, x, y, el, connections: new Set() };
-  joints.push(joint);
+  const joint = { id: nextId(), name, x, y, el, connections: new Set() };
+  el.addEventListener('pointerdown', e => onItemPointerDown('joint', joint.id, e));
   worldEl.appendChild(el);
   positionJointEl(joint);
+  return joint;
+}
+
+// creates a joint marker at the given stage coordinates and selects it
+function createJoint(x, y) {
+  jointCount++;
+  const joint = makeJoint(`Joint ${jointCount}`, x, y);
+  joints.push(joint);
   renderJointList();
-  selectJoint(id);
+  selectJoint(joint.id);
   updateHint();
 }
 
@@ -434,9 +444,19 @@ function endDrag() {
   window.removeEventListener('pointerup', endDrag);
 }
 
-// builds the export payload of joint offsets and triggers a download
-function exportJson() {
-  const data = {
+// strips a name down to letters, numbers, underscores, and dashes
+function cleanName(name) {
+  return (name || '').replace(/[^A-Za-z0-9_-]/g, '');
+}
+
+// returns the current creature name, falling back to a default
+function creatureName() {
+  return cleanName(nameInput.value) || 'creature';
+}
+
+// builds the joint payload of offsets from each connected limb center
+function buildJointData() {
+  return {
     joints: joints.map(j => ({
       name: j.name,
       position: { x: Math.round(j.x), y: Math.round(j.y) },
@@ -454,12 +474,115 @@ function exportJson() {
       })
     }))
   };
-  download('creature-joints.json', JSON.stringify(data, null, 2));
 }
 
-// downloads text content as a named file
-function download(filename, text) {
-  const blob = new Blob([text], { type: 'application/json' });
+// exports the joint offset data as a json file
+function exportJson() {
+  downloadBlob(`${creatureName()}-joints.json`,
+    new TextEncoder().encode(JSON.stringify(buildJointData(), null, 2)),
+    'application/json');
+}
+
+// builds a full scene manifest describing limbs, layer order, and joints
+function buildManifest() {
+  return {
+    version: 1,
+    name: creatureName(),
+    limbs: limbs.map((l, i) => ({
+      name: l.name,
+      file: `limbs/${i}-${l.name.replace(/[\\/]/g, '_')}`,
+      x: Math.round(l.x),
+      y: Math.round(l.y),
+      width: l.width,
+      height: l.height,
+      hidden: l.hidden
+    })),
+    joints: joints.map(j => ({
+      name: j.name,
+      x: Math.round(j.x),
+      y: Math.round(j.y),
+      connections: [...j.connections]
+        .map(id => limbs.findIndex(l => l.id === id))
+        .filter(idx => idx >= 0)
+    }))
+  };
+}
+
+// exports the whole creature (manifest, joint data, and pngs) as a zip
+async function exportFullCreature() {
+  const enc = new TextEncoder();
+  const manifest = buildManifest();
+  const files = [
+    { name: 'creature.json', data: enc.encode(JSON.stringify(manifest, null, 2)) },
+    { name: 'joints.json', data: enc.encode(JSON.stringify(buildJointData(), null, 2)) }
+  ];
+  for (let i = 0; i < limbs.length; i++) {
+    const buf = await limbs[i].blob.arrayBuffer();
+    files.push({ name: manifest.limbs[i].file, data: new Uint8Array(buf) });
+  }
+  downloadBlob(`${creatureName()}.zip`, createZip(files), 'application/zip');
+}
+
+// reads a full-creature zip and rebuilds the scene from it
+function importFullCreature(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const entries = readZip(reader.result);
+    const manifestEntry = entries.find(e => e.name === 'creature.json');
+    if (!manifestEntry) return;
+    loadCreature(JSON.parse(new TextDecoder().decode(manifestEntry.data)), entries);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// rebuilds the scene from a manifest and its zip entries
+function loadCreature(manifest, entries) {
+  clearScene();
+  nameInput.value = cleanName(manifest.name) || 'creature';
+  const fileMap = {};
+  entries.forEach(e => { fileMap[e.name] = e.data; });
+
+  (manifest.limbs || []).forEach(m => {
+    const data = fileMap[m.file];
+    if (!data) return;
+    const blob = new Blob([data], { type: 'image/png' });
+    const url = URL.createObjectURL(blob);
+    limbs.push(makeLimb(m.name, url, blob, m.width, m.height, m.x, m.y, !!m.hidden));
+  });
+  applyZOrder();
+
+  (manifest.joints || []).forEach(m => {
+    const joint = makeJoint(m.name, m.x, m.y);
+    (m.connections || []).forEach(idx => {
+      const l = limbs[idx];
+      if (l) joint.connections.add(l.id);
+    });
+    joints.push(joint);
+  });
+  jointCount = joints.length;
+
+  renderLimbList();
+  renderJointList();
+  renderConnList();
+  renderLinks();
+  updateHint();
+}
+
+// removes every limb and joint and resets selection state
+function clearScene() {
+  limbs.forEach(l => { l.el.remove(); URL.revokeObjectURL(l.url); });
+  joints.forEach(j => j.el.remove());
+  limbs.length = 0;
+  joints.length = 0;
+  selectedLimb = null;
+  selectedJoint = null;
+  jointCount = 0;
+  placeCount = 0;
+}
+
+// downloads a byte array as a named file
+function downloadBlob(filename, data, type) {
+  const blob = new Blob([data], { type });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -483,8 +606,19 @@ document.getElementById('add-joint').addEventListener('click', () => {
   createJoint(cx + (jointCount % 5) * 16, cy + (jointCount % 5) * 16);
 });
 
+nameInput.addEventListener('input', () => {
+  const clean = cleanName(nameInput.value);
+  if (clean !== nameInput.value) nameInput.value = clean;
+});
+
 document.getElementById('reset-view').addEventListener('click', resetView);
-document.getElementById('export-json').addEventListener('click', exportJson);
+document.getElementById('export-joints').addEventListener('click', exportJson);
+document.getElementById('export-full').addEventListener('click', exportFullCreature);
+document.getElementById('import-full').addEventListener('click', () => creatureFile.click());
+creatureFile.addEventListener('change', e => {
+  if (e.target.files[0]) importFullCreature(e.target.files[0]);
+  creatureFile.value = '';
+});
 
 stageEl.addEventListener('pointerdown', e => {
   if (e.target === stageEl || e.target === worldEl || e.target === linksEl || e.target === stageHint) {
