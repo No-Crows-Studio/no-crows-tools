@@ -12,6 +12,12 @@ const connListEl = document.getElementById('conn-list');
 const SVGNS = 'http://www.w3.org/2000/svg';
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 8;
+const ARROW_STEPS = {
+  ArrowUp: { x: 0, y: -1 },
+  ArrowDown: { x: 0, y: 1 },
+  ArrowLeft: { x: -1, y: 0 },
+  ArrowRight: { x: 1, y: 0 }
+};
 
 const limbs = [];  // { id, name, url, x, y, width, height, el }
 const joints = []; // { id, name, x, y, el, connections: Set<limbId> }
@@ -55,6 +61,12 @@ function stagePoint(e) {
 // applies the current pan and zoom to the world layer
 function applyView() {
   worldEl.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+  joints.forEach(scaleJointEl);
+}
+
+// counter-scales a joint marker so it stays a fixed screen size while zooming
+function scaleJointEl(joint) {
+  joint.el.style.transform = `scale(${1 / zoom})`;
 }
 
 // clamps a number to a range
@@ -108,8 +120,8 @@ function createLimb(name, url, w, h) {
   el.style.height = h + 'px';
   el.addEventListener('pointerdown', e => onItemPointerDown('limb', id, e));
 
-  const limb = { id, name, url, x, y, width: w, height: h, el };
-  limbs.push(limb);
+  const limb = { id, name, url, x, y, width: w, height: h, hidden: false, el };
+  limbs.unshift(limb);
   worldEl.appendChild(el);
   positionLimbEl(limb);
   applyZOrder();
@@ -150,11 +162,12 @@ function positionLimbEl(limb) {
 function positionJointEl(joint) {
   joint.el.style.left = joint.x + 'px';
   joint.el.style.top = joint.y + 'px';
+  scaleJointEl(joint);
 }
 
-// reassigns z-index so list order drives stacking
+// reassigns z-index so the top of the list is the top layer
 function applyZOrder() {
-  limbs.forEach((l, i) => { l.el.style.zIndex = i + 1; });
+  limbs.forEach((l, i) => { l.el.style.zIndex = limbs.length - i; });
 }
 
 // moves a limb one step forward or back in stacking order
@@ -164,6 +177,19 @@ function reorderLimb(id, dir) {
   if (i < 0 || j < 0 || j >= limbs.length) return;
   [limbs[i], limbs[j]] = [limbs[j], limbs[i]];
   applyZOrder();
+  renderLimbList();
+}
+
+// toggles a limb's hidden state, deselecting it when it becomes hidden
+function toggleLimbHidden(id) {
+  const limb = findLimb(id);
+  if (!limb) return;
+  limb.hidden = !limb.hidden;
+  limb.el.classList.toggle('hidden', limb.hidden);
+  if (limb.hidden && selectedLimb === id) {
+    selectedLimb = null;
+    updateSelectionStyles();
+  }
   renderLimbList();
 }
 
@@ -209,17 +235,25 @@ function toggleConnection(jointId, limbId) {
   renderLinks();
 }
 
-// selects a limb for layering and deletion
+// selects a limb for layering and deletion, clearing any joint selection
 function selectLimb(id) {
+  const l = findLimb(id);
+  if (l && l.hidden) return;
   selectedLimb = id;
+  selectedJoint = null;
   updateSelectionStyles();
   renderLimbList();
+  renderJointList();
+  renderConnList();
+  renderLinks();
 }
 
-// selects a joint and highlights its connected limbs
+// selects a joint and highlights its connected limbs, clearing any limb selection
 function selectJoint(id) {
   selectedJoint = id;
+  selectedLimb = null;
   updateSelectionStyles();
+  renderLimbList();
   renderJointList();
   renderConnList();
   renderLinks();
@@ -267,19 +301,26 @@ function renderLinks() {
 // rebuilds the limb list panel
 function renderLimbList() {
   limbListEl.innerHTML = '';
-  limbs.forEach(l => {
+  limbs.forEach((l, i) => {
     const li = document.createElement('li');
     if (l.id === selectedLimb) li.className = 'active';
+    if (l.hidden) li.classList.add('hidden-row');
+
+    const num = document.createElement('span');
+    num.className = 'layer-num';
+    num.textContent = limbs.length - 1 - i;
 
     const name = document.createElement('span');
     name.className = 'row-name';
     name.textContent = l.name;
     name.title = l.name;
-    name.addEventListener('click', () => selectLimb(l.id));
+    if (!l.hidden) name.addEventListener('click', () => selectLimb(l.id));
 
+    li.appendChild(num);
     li.appendChild(name);
-    li.appendChild(makeButton('Up', () => reorderLimb(l.id, 1)));
-    li.appendChild(makeButton('Dn', () => reorderLimb(l.id, -1)));
+    li.appendChild(makeButton(l.hidden ? 'Show' : 'Hide', () => toggleLimbHidden(l.id)));
+    li.appendChild(makeButton('Up', () => reorderLimb(l.id, -1)));
+    li.appendChild(makeButton('Dn', () => reorderLimb(l.id, 1)));
     li.appendChild(makeButton('×', () => deleteLimb(l.id)));
     limbListEl.appendChild(li);
   });
@@ -465,14 +506,38 @@ stageEl.addEventListener('wheel', e => {
 }, { passive: false });
 
 document.addEventListener('keydown', e => {
-  if (e.key !== 'Delete' && e.key !== 'Backspace') return;
   const tag = document.activeElement && document.activeElement.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (selectedLimb != null) {
+      e.preventDefault();
+      deleteLimb(selectedLimb);
+    } else if (selectedJoint != null) {
+      e.preventDefault();
+      deleteJoint(selectedJoint);
+    }
+    return;
+  }
+
+  const dir = ARROW_STEPS[e.key];
+  if (!dir) return;
+  const step = e.shiftKey ? 10 : 1;
   if (selectedLimb != null) {
+    const l = findLimb(selectedLimb);
+    if (!l) return;
     e.preventDefault();
-    deleteLimb(selectedLimb);
+    l.x += dir.x * step;
+    l.y += dir.y * step;
+    positionLimbEl(l);
+    renderLinks();
   } else if (selectedJoint != null) {
+    const j = findJoint(selectedJoint);
+    if (!j) return;
     e.preventDefault();
-    deleteJoint(selectedJoint);
+    j.x += dir.x * step;
+    j.y += dir.y * step;
+    positionJointEl(j);
+    renderLinks();
   }
 });

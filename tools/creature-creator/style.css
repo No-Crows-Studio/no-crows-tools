@@ -65,6 +65,15 @@ button {
   padding: 0.2rem 0;
 }
 
+.list .layer-num {
+  flex: 0 0 auto;
+  min-width: 1.2em;
+  text-align: right;
+  color: #999;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .list .row-name {
   flex: 1;
   cursor: pointer;
@@ -151,6 +160,15 @@ button {
   -webkit-user-drag: none;
 }
 
+.limb.hidden {
+  display: none;
+}
+
+.list li.hidden-row .row-name {
+  color: #aaa;
+  cursor: default;
+}
+
 .limb.highlight {
   outline: 2px dashed #e08a00;
   outline-offset: 2px;
@@ -166,6 +184,7 @@ button {
   width: 0;
   height: 0;
   z-index: 10000;
+  transform-origin: 0 0;
 }
 
 .joint-dot {
