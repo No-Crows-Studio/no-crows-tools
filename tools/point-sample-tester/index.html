@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Point Sample Tester — No Crows tools</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <p class="back"><a href="../../">&larr; No Crows tools</a></p>
+  <h1>Point Sample Tester</h1>
+  <p class="intro">Add images and the canvas redraws them as a grid of point-sampled cells. Drag an image to move it, drag its corner handle to scale proportionally, and drag the top handle to rotate (it snaps to 0, 90, 180, 270). Adjust the cell size, cell shape, and color quantization on the left. Scroll to zoom, middle-click drag to pan, and reset zoom for 1:1.</p>
+
+  <div id="app">
+    <aside id="panel">
+      <section>
+        <h2>Images</h2>
+        <div class="toolbar">
+          <button id="add-image">Add image</button>
+          <button id="delete-image">Delete selected</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>View</h2>
+        <div class="toolbar">
+          <button id="reset-view">Reset zoom (1:1)</button>
+        </div>
+      </section>
+
+      <input type="file" id="image-file" accept="image/*" multiple hidden>
+
+      <section>
+        <h2>Effect</h2>
+
+        <div class="param">
+          <label>Cell size <span class="val" id="pixel-val">8</span> px</label>
+          <input type="range" id="pixel-size" min="1" max="64" value="8">
+        </div>
+
+        <div class="param">
+          <label for="shape">Cell shape</label>
+          <select id="shape">
+            <option value="square">Square</option>
+            <option value="triangle">Triangle</option>
+          </select>
+        </div>
+
+        <div class="param">
+          <label class="checkbox-row"><input type="checkbox" id="quantize"> Quantize colors</label>
+        </div>
+
+        <div class="param disabled" id="colors-row">
+          <label>Colors <span class="val" id="colors-val">16</span></label>
+          <input type="range" id="colors" min="1" max="64" value="16" disabled>
+        </div>
+      </section>
+    </aside>
+
+    <div id="stage">
+      <canvas id="view"></canvas>
+      <p id="stage-hint">Add an image to begin. Scroll to zoom, middle-click drag to pan.</p>
+    </div>
+  </div>
+
+  <script src="sampler.js"></script>
+</body>
+</html>
