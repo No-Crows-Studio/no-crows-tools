@@ -24,6 +24,15 @@ const ARROW_STEPS = {
 const limbs = [];  // { id, name, url, blob, x, y, width, height, hidden, el }
 const joints = []; // { id, name, x, y, el, connections: Set<limbId> }
 
+// reusable selection box and name label, kept above all sprites for the selected limb
+const limbSel = document.createElement('div');
+limbSel.className = 'limb-sel';
+limbSel.hidden = true;
+const limbLabel = document.createElement('span');
+limbLabel.className = 'limb-label';
+limbSel.appendChild(limbLabel);
+worldEl.appendChild(limbSel);
+
 let idSeq = 0;
 let jointCount = 0;
 let placeCount = 0;
@@ -166,6 +175,23 @@ function createJoint(x, y) {
 function positionLimbEl(limb) {
   limb.el.style.left = limb.x + 'px';
   limb.el.style.top = limb.y + 'px';
+  if (limb.id === selectedLimb) updateLimbLabel();
+}
+
+// positions the selection box and name label over the selected limb
+function updateLimbLabel() {
+  const l = selectedLimb != null ? findLimb(selectedLimb) : null;
+  if (!l || l.hidden) {
+    limbSel.hidden = true;
+    return;
+  }
+  limbSel.hidden = false;
+  limbSel.style.left = l.x + 'px';
+  limbSel.style.top = l.y + 'px';
+  limbSel.style.width = l.width + 'px';
+  limbSel.style.height = l.height + 'px';
+  limbLabel.textContent = l.name;
+  limbLabel.title = l.name;
 }
 
 // writes a joint's position to its element
@@ -280,14 +306,14 @@ function deselectAll() {
   renderLinks();
 }
 
-// applies selected and highlight classes based on current selection
+// applies the highlight class and selection box based on current selection
 function updateSelectionStyles() {
   const joint = selectedJoint != null ? findJoint(selectedJoint) : null;
   limbs.forEach(l => {
-    l.el.classList.toggle('selected', l.id === selectedLimb);
     l.el.classList.toggle('highlight', !!joint && joint.connections.has(l.id));
   });
   joints.forEach(j => j.el.classList.toggle('selected', j.id === selectedJoint));
+  updateLimbLabel();
 }
 
 // draws connector lines from the selected joint to its connected limbs
@@ -328,9 +354,9 @@ function renderLimbList() {
 
     li.appendChild(num);
     li.appendChild(name);
-    li.appendChild(makeButton(l.hidden ? 'Show' : 'Hide', () => toggleLimbHidden(l.id)));
-    li.appendChild(makeButton('Up', () => reorderLimb(l.id, -1)));
-    li.appendChild(makeButton('Dn', () => reorderLimb(l.id, 1)));
+    li.appendChild(makeIconButton(l.hidden ? ICONS.show : ICONS.hide, l.hidden ? 'Show' : 'Hide', () => toggleLimbHidden(l.id)));
+    li.appendChild(makeIconButton(ICONS.up, 'Move up', () => reorderLimb(l.id, -1)));
+    li.appendChild(makeIconButton(ICONS.down, 'Move down', () => reorderLimb(l.id, 1)));
     li.appendChild(makeButton('×', () => deleteLimb(l.id)));
     limbListEl.appendChild(li);
   });
@@ -398,6 +424,25 @@ function updateHint() {
 function makeButton(text, onClick) {
   const b = document.createElement('button');
   b.textContent = text;
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+// google material icon svg paths, 24x24 viewbox
+const ICONS = {
+  hide: 'M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z',
+  show: 'M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z',
+  up: 'M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z',
+  down: 'M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z'
+};
+
+// builds a small panel button showing a google material icon
+function makeIconButton(path, title, onClick) {
+  const b = document.createElement('button');
+  b.className = 'icon-btn';
+  b.title = title;
+  b.setAttribute('aria-label', title);
+  b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg>`;
   b.addEventListener('click', onClick);
   return b;
 }

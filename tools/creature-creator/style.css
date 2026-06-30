@@ -28,8 +28,8 @@ h1 {
 }
 
 #panel {
-  width: 240px;
-  flex: 0 0 240px;
+  width: 320px;
+  flex: 0 0 320px;
   font-size: 0.85rem;
 }
 
@@ -67,7 +67,14 @@ button {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.2rem 0;
+  padding: 0.2rem 0.3rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+
+.list li.active {
+  border-color: #3a6bff;
+  background: #eef2ff;
 }
 
 .list .layer-num {
@@ -85,6 +92,7 @@ button {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: 0.75rem;
 }
 
 .list li.active .row-name {
@@ -94,6 +102,20 @@ button {
 .list button {
   padding: 1px 6px;
   font-size: 0.8rem;
+}
+
+.list .icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+}
+
+.list .icon-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  display: block;
 }
 
 .list input[type="text"] {
@@ -179,9 +201,29 @@ button {
   outline-offset: 2px;
 }
 
-.limb.selected {
+.limb-sel {
+  position: absolute;
   outline: 2px solid #3a6bff;
   outline-offset: 2px;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.limb-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  box-sizing: border-box;
+  transform: translateY(-100%);
+  text-align: center;
+  color: #3a6bff;
+  font-size: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 2px;
 }
 
 .joint {
