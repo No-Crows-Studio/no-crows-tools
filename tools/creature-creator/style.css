@@ -1,6 +1,6 @@
 body {
   font-family: sans-serif;
-  max-width: 1100px;
+  max-width: 1500px;
   margin: 2rem auto;
   padding: 0 1rem;
   color: #222;
@@ -27,27 +27,62 @@ h1 {
   align-items: stretch;
 }
 
-#panel {
-  width: 320px;
-  flex: 0 0 320px;
+#panel,
+#joint-panel {
+  width: 300px;
+  flex: 0 0 300px;
+  font-size: 0.85rem;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+#stage-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+#io-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+#io-bar input[type="text"] {
+  padding: 6px;
   font-size: 0.85rem;
 }
 
-.toolbar {
+#stage-tools {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 10001;
   display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 1rem;
+  gap: 4px;
+}
+
+#stage-tools button {
+  padding: 3px 7px;
+  font-size: 0.72rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #bbb;
+  border-radius: 4px;
+}
+
+#joint-panel h2 {
+  font-size: 0.9rem;
+  margin: 0.6rem 0 0.3rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.2rem;
 }
 
 button {
   padding: 6px 12px;
   cursor: pointer;
-}
-
-.toolbar input[type="text"] {
-  padding: 6px;
-  font-size: 0.85rem;
 }
 
 #panel h2 {
@@ -124,10 +159,15 @@ button {
   font-size: 0.85rem;
 }
 
-.list label {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
+.list .joint-type {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 0.75rem;
+}
+
+.list .conn-check {
+  flex: 0 0 auto;
+  margin: 0;
   cursor: pointer;
 }
 
@@ -176,8 +216,14 @@ button {
 
 .link {
   stroke: #3a6bff;
-  stroke-width: 1.5;
-  stroke-dasharray: 4 3;
+}
+
+.joint-link {
+  stroke: #f5b301;
+}
+
+.joint-link.selected {
+  stroke: #2ea043;
 }
 
 .limb {
@@ -196,15 +242,20 @@ button {
   cursor: default;
 }
 
-.limb.highlight {
+.limb-highlight {
+  position: absolute;
   outline: 2px dashed #e08a00;
   outline-offset: 2px;
+  transform-origin: 0 0;
+  pointer-events: none;
+  z-index: 9998;
 }
 
 .limb-sel {
   position: absolute;
   outline: 2px solid #3a6bff;
   outline-offset: 2px;
+  transform-origin: 0 0;
   pointer-events: none;
   z-index: 9999;
 }
@@ -234,22 +285,29 @@ button {
   transform-origin: 0 0;
 }
 
-.joint-dot {
+.joint-svg {
   position: absolute;
   left: 0;
   top: 0;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #e23030;
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 1px #888;
+  width: 16px;
+  height: 16px;
   transform: translate(-50%, -50%);
+  overflow: visible;
   cursor: move;
+  filter: drop-shadow(0 0 1px #666);
 }
 
-.joint.selected .joint-dot {
-  background: #3a6bff;
+.joint-shape {
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+
+.joint.selected .joint-shape {
+  fill: #3a6bff;
+}
+
+#world.hide-joint-names .joint-label {
+  display: none;
 }
 
 .joint-label {

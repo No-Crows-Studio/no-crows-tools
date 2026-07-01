@@ -9,29 +9,10 @@
 <body>
   <p class="back"><a href="../../">&larr; No Crows tools</a></p>
   <h1>Creature Creator</h1>
-  <p class="intro">Add limb images, position them, and connect them with joints. Right-click the canvas or press + Joint to add a joint. Hide a limb to lock it out of the way while you work. Select a limb or joint and nudge it with the arrow keys (hold Shift for larger steps). Export joint data writes each joint's offset from its connected limb centers to JSON. Export full creature saves a zip of the images and layout that import full creature can reload.</p>
+  <p class="intro">Add limb images, position them, and connect them with joints. Press + Joint to add a joint. Right-click near a joint and drag to another joint to connect them. Set each joint's type to shape and color its marker. Select a joint to check off the limbs and other joints it connects to. Hide a limb to lock it out of the way while you work. Select a limb or joint and nudge it with the arrow keys (hold Shift for larger steps). Export joint data writes each joint's offset from its connected limb centers to JSON. Export full creature saves a zip of the images and layout that import full creature can reload.</p>
 
   <div id="app">
     <aside id="panel">
-      <section>
-        <h2>Import / Export</h2>
-        <div class="toolbar">
-          <input type="text" id="creature-name" placeholder="creature name">
-          <button id="export-joints">Export joint data</button>
-          <button id="export-full">Export full creature</button>
-          <button id="import-full">Import full creature</button>
-        </div>
-      </section>
-
-      <section>
-        <h2>Editor</h2>
-        <div class="toolbar">
-          <button id="add-limbs">Add limbs</button>
-          <button id="add-joint">+ Joint</button>
-          <button id="reset-view">Reset zoom (1:1)</button>
-        </div>
-      </section>
-
       <input type="file" id="limb-file" accept="image/png" multiple hidden>
       <input type="file" id="creature-file" accept=".zip,application/zip" hidden>
 
@@ -39,27 +20,50 @@
         <h2>Limbs</h2>
         <ul id="limb-list" class="list"></ul>
       </section>
+    </aside>
 
+    <div id="stage-col">
+      <div id="io-bar">
+        <input type="text" id="creature-name" placeholder="creature name">
+        <button id="export-joints">Export joint data</button>
+        <button id="export-full">Export full creature</button>
+        <button id="import-full">Import full creature</button>
+      </div>
+
+      <div id="stage">
+        <div id="stage-tools">
+          <button id="undo">Undo</button>
+          <button id="add-limbs">Add limbs</button>
+          <button id="add-joint">+ Joint</button>
+          <button id="reset-view">Reset zoom (1:1)</button>
+          <button id="toggle-joint-names">Hide joint names</button>
+          <button id="toggle-connections">Hide sprite connections</button>
+          <button id="toggle-joint-connections">Hide joint connections</button>
+        </div>
+        <div id="world">
+          <svg id="links"></svg>
+        </div>
+        <p id="stage-hint">Add limbs to begin. Scroll to zoom.</p>
+      </div>
+    </div>
+
+    <aside id="joint-panel">
       <section>
         <h2>Joints</h2>
         <ul id="joint-list" class="list"></ul>
       </section>
-
-      <section id="connections-section" hidden>
-        <h2>Connected to <span id="conn-joint-name"></span></h2>
-        <ul id="conn-list" class="list"></ul>
-      </section>
     </aside>
-
-    <div id="stage">
-      <div id="world">
-        <svg id="links"></svg>
-      </div>
-      <p id="stage-hint">Add limbs to begin. Right-click to drop a joint. Scroll to zoom.</p>
-    </div>
   </div>
 
   <script src="zip.js"></script>
-  <script src="creature.js"></script>
+  <script src="config.js"></script>
+  <script src="state.js"></script>
+  <script src="view.js"></script>
+  <script src="limbs.js"></script>
+  <script src="joints.js"></script>
+  <script src="render.js"></script>
+  <script src="undo.js"></script>
+  <script src="io.js"></script>
+  <script src="input.js"></script>
 </body>
 </html>
